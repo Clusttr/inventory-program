@@ -17,11 +17,9 @@ pub struct AddAsset<'info> {
     pub payer: Signer<'info>,
 
     #[account(
-        init_if_needed,
-        space = Inventory::SPACE,
+        mut,
         seeds = [Inventory::SEED_PREFIX.as_bytes()],
         bump,
-        payer = payer
     )]
     pub inventory: Account<'info, Inventory>,
 

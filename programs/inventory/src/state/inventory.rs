@@ -12,9 +12,9 @@ impl Inventory {
     pub const SPACE: usize = 8 + 4 + 1;
     pub const SEED_PREFIX: &'static str = "inventory";
 
-    // pub fn new() -> Self {
-    //     Self { assets: vec![] }
-    // }
+    pub fn new() -> Self {
+        Self { assets: vec![] }
+    }
 }
 
 pub trait InventoryAccount<'info> {
@@ -55,7 +55,8 @@ impl<'info> InventoryAccount<'info> for Account<'info, Inventory> {
         match self.check_asset(&asset_key) {
             Ok(_) => {}
             Err(_) => {
-                self.realloc(32, payer, system_program.clone())?;
+                let space = std::mem::size_of::<Pubkey>();
+                self.realloc(space, payer, system_program.clone())?;
                 self.assets.push(asset_key)
             }
         }
@@ -77,7 +78,9 @@ impl<'info> InventoryAccount<'info> for Account<'info, Inventory> {
             account_info.clone(),
             additional_rent_to_pay,
             system_program,
-        )
+        )?;
+        account_info.realloc(new_account_size, false)?;
+        Ok(())
     }
 }
 
