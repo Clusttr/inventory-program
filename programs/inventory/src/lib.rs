@@ -15,6 +15,10 @@ pub mod inventory {
         instructions::create_inventory(ctx)
     }
 
+    pub fn close_inventory(ctx: Context<CloseInventory>) -> Result<()> {
+        instructions::close_inventory(ctx)
+    }
+
     pub fn add_asset(ctx: Context<AddAsset>) -> Result<()> {
         instructions::add_asset(ctx)
     }
