@@ -3,6 +3,13 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
 
 pub fn close_inventory(ctx: Context<CloseInventory>) -> Result<()> {
+    let lamports = ctx.accounts.asset_info.get_lamports();
+    **ctx
+        .accounts
+        .asset_info
+        .to_account_info()
+        .try_borrow_lamports()? -= lamports;
+    **ctx.accounts.payer.to_account_info().try_borrow_lamports()? -= lamports;
     Ok(())
 }
 
