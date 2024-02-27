@@ -18,4 +18,8 @@ pub mod inventory {
     pub fn add_asset(ctx: Context<AddAsset>) -> Result<()> {
         instructions::add_asset(ctx)
     }
+
+    pub fn withdraw_asset(ctx: Context<WithdrawAsset>) -> Result<()> {
+        instructions::withdraw_asset(ctx)
+    }
 }

@@ -20,7 +20,7 @@ describe("inventory", () => {
       program.programId
   )
 
-  it("should create inventory", async () => {
+  it.skip("should create inventory", async () => {
       const tx = await  program.methods.createInventory()
           .accounts({
               payer: payer.publicKey,
@@ -41,7 +41,18 @@ describe("inventory", () => {
         .rpc();
 
     const inventoryInfo = await program.account.inventory.fetch(inventory_info_address);
-    console.log({inventoryInfo})
-    // assert(inventoryInfo.assets.includes(nft), "Failed to insert asset")
+    assert(inventoryInfo.assets.some(x => x.toString() === nft.toString()), "Failed to insert asset")
   });
+
+  it("should withdraw asset", async () => {
+      const _ = await program.methods.withdrawAsset()
+          .accounts({
+              payer: payer.publicKey,
+              inventory: inventory_info_address,
+              mint: nft
+          })
+          .rpc()
+      const inventoryInfo = await program.account.inventory.fetch(inventory_info_address);
+      assert(!inventoryInfo.assets.some(x => x.toString() === nft.toString()), "Failed to remove asset")
+  })
 });

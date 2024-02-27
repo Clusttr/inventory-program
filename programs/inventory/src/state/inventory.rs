@@ -27,6 +27,8 @@ pub trait InventoryAccount<'info> {
         system_program: &Program<'info, System>,
     ) -> Result<()>;
 
+    fn remove_asset(&mut self, asset_mint: &Account<'info, Mint>) -> Result<()>;
+
     fn realloc(
         &mut self,
         space: usize,
@@ -61,6 +63,17 @@ impl<'info> InventoryAccount<'info> for Account<'info, Inventory> {
             }
         }
         Ok(())
+    }
+
+    fn remove_asset(&mut self, asset_mint: &Account<'info, Mint>) -> Result<()> {
+        let asset_key = asset_mint.key();
+        match self.check_asset(&asset_key) {
+            Ok(_) => {
+                self.assets.retain(|key| key != &asset_mint.key());
+                Ok(())
+            }
+            Err(_) => Err(InventoryError::InvalidAssetId.into()),
+        }
     }
 
     fn realloc(
