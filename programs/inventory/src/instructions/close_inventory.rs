@@ -8,8 +8,12 @@ pub fn close_inventory(ctx: Context<CloseInventory>) -> Result<()> {
         .accounts
         .asset_info
         .to_account_info()
-        .try_borrow_lamports()? -= lamports;
-    **ctx.accounts.payer.to_account_info().try_borrow_lamports()? -= lamports;
+        .try_borrow_mut_lamports()? -= lamports;
+    **ctx
+        .accounts
+        .payer
+        .to_account_info()
+        .try_borrow_mut_lamports()? -= lamports;
     Ok(())
 }
 

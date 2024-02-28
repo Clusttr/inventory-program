@@ -1,4 +1,4 @@
-use crate::state::{AssetInfo, Inventory};
+use crate::state::AssetInfo;
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
 
