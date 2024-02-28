@@ -2,12 +2,7 @@ use crate::state::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
 
-pub fn add_asset(ctx: Context<AddAsset>) -> Result<()> {
-    ctx.accounts.inventory.insert_asset(
-        &ctx.accounts.mint,
-        &ctx.accounts.payer,
-        &ctx.accounts.system_program,
-    )?;
+pub fn add_asset(_ctx: Context<AddAsset>) -> Result<()> {
     Ok(())
 }
 

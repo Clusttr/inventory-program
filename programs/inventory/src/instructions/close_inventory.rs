@@ -1,8 +1,9 @@
-use crate::state::{AssetInfo, Inventory};
+use crate::state::{AssetInfo, Inventory, InventoryAccount};
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
 
 pub fn close_inventory(ctx: Context<CloseInventory>) -> Result<()> {
+    ctx.accounts.inventory.remove_asset(&ctx.accounts.mint)?;
     let lamports = ctx.accounts.asset_info.get_lamports();
     **ctx
         .accounts
@@ -13,7 +14,7 @@ pub fn close_inventory(ctx: Context<CloseInventory>) -> Result<()> {
         .accounts
         .payer
         .to_account_info()
-        .try_borrow_mut_lamports()? -= lamports;
+        .try_borrow_mut_lamports()? += lamports;
     Ok(())
 }
 
@@ -23,6 +24,7 @@ pub struct CloseInventory<'info> {
     pub payer: Signer<'info>,
 
     #[account(
+    mut,
     seeds = [Inventory::SEED_PREFIX.as_bytes()],
     bump,
     )]

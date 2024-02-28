@@ -4,7 +4,11 @@ use anchor_lang::prelude::{Account, Program, Signer, System};
 use anchor_spl::token::Mint;
 
 pub fn create_inventory(ctx: Context<CreateInventory>) -> Result<()> {
-    ctx.accounts.inventory.set_inner(Inventory::new());
+    ctx.accounts.inventory.insert_asset(
+        &ctx.accounts.mint,
+        &ctx.accounts.payer,
+        &ctx.accounts.system_program,
+    )?;
     Ok(())
 }
 #[derive(Accounts)]
@@ -13,9 +17,7 @@ pub struct CreateInventory<'info> {
     pub payer: Signer<'info>,
 
     #[account(
-        init_if_needed,
-        payer = payer,
-        space = Inventory::SPACE,
+        mut,
         seeds = [Inventory::SEED_PREFIX.as_bytes()],
         bump,
     )]
