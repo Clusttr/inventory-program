@@ -17,8 +17,8 @@ pub mod inventory {
         Ok(())
     }
 
-    pub fn create_inventory(ctx: Context<CreateInventory>) -> Result<()> {
-        instructions::create_inventory(ctx)
+    pub fn create_inventory(ctx: Context<CreateInventory>, price: u64) -> Result<()> {
+        instructions::create_inventory(ctx, price)
     }
 
     pub fn close_inventory(ctx: Context<CloseInventory>) -> Result<()> {

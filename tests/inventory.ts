@@ -3,6 +3,7 @@ import { Program } from "@coral-xyz/anchor";
 import { Inventory } from "../target/types/inventory";
 import {PublicKey} from "@solana/web3.js";
 import { assert } from "chai";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token"
 
 describe("inventory", () => {
   // Configure the client to use the local cluster.
@@ -10,7 +11,9 @@ describe("inventory", () => {
   const payer = anchor.AnchorProvider.env().wallet as anchor.Wallet
 
   const program = anchor.workspace.Inventory as Program<Inventory>;
-  const nft = new PublicKey("DWDRomhCxYJhodb5vbYeYGZpLTSC9CFpoUEZ8W4CGaYd")
+  const nft = new PublicKey("DWDRomhCxYJhodb5vbYeYGZpLTSC9CFpoUEZ8W4CGaYd");
+  const usdc_mint = new PublicKey("");
+
   const [inventory_info_address] = PublicKey.findProgramAddressSync(
       [Buffer.from("inventory")],
       program.programId
@@ -18,15 +21,25 @@ describe("inventory", () => {
   const [asset_info] = PublicKey.findProgramAddressSync(
       [Buffer.from("asset_info"), nft.toBuffer()],
       program.programId
-  )
+  );
+    const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: PublicKey = new PublicKey(
+        'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+    );
+  const usdc_ata = PublicKey.findProgramAddressSync(
+      [payer.publicKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), usdc_mint.toBuffer()],
+      SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
+      )[0]
 
   it("should create inventory", async () => {
-      const tx = await  program.methods.createInventory()
+      let price = new anchor.BN(200)
+      const tx = await  program.methods.createInventory(price)
           .accounts({
               payer: payer.publicKey,
               inventory: inventory_info_address,
               assetInfo: asset_info,
-              mint: nft
+              usdcAccount: usdc_ata,
+              mint: nft,
+              usdcMint: usdc_mint,
           })
           .rpc()
   })
