@@ -11,8 +11,8 @@ describe("inventory", () => {
   const payer = anchor.AnchorProvider.env().wallet as anchor.Wallet
 
   const program = anchor.workspace.Inventory as Program<Inventory>;
+  const USDC_MINT = new anchor.web3.PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
   const nft = new PublicKey("DWDRomhCxYJhodb5vbYeYGZpLTSC9CFpoUEZ8W4CGaYd");
-  const usdc_mint = new PublicKey("");
 
   const [inventory_info_address] = PublicKey.findProgramAddressSync(
       [Buffer.from("inventory")],
@@ -26,7 +26,7 @@ describe("inventory", () => {
         'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
     );
   const usdc_ata = PublicKey.findProgramAddressSync(
-      [payer.publicKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), usdc_mint.toBuffer()],
+      [payer.publicKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), USDC_MINT.toBuffer()],
       SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
       )[0]
 
@@ -39,7 +39,7 @@ describe("inventory", () => {
               assetInfo: asset_info,
               usdcAccount: usdc_ata,
               mint: nft,
-              usdcMint: usdc_mint,
+              usdcMint: USDC_MINT,
           })
           .rpc()
   })
@@ -104,7 +104,7 @@ describe("inventory", () => {
       assert(!inventory.assets.some(x => x.toString() === nft.toString()), "Failed to remove asset")
   })
 
-    it.only("should print accounts", async () => {
+    it("should print accounts", async () => {
         console.log({asset_info})
         const assetInfo = await program.account.assetInfo.fetch(asset_info)
         const inventory = await program.account.inventory.fetch(inventory_info_address)
@@ -114,10 +114,8 @@ describe("inventory", () => {
         })
     })
 
-    it("should mint some usdc", async () => {
-        const USDC_MINT = new anchor.web3.PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+    it.only("should mint some usdc", async () => {
         const provider = anchor.AnchorProvider.env()
-        // const payer = (provider.wallet as anchor.Wallet).payer;
 
         assert.ok(payer.publicKey.toBase58() == provider.wallet.publicKey.toBase58())
 
