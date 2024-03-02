@@ -1,11 +1,13 @@
 {
     "scripts": {
         "main": "ts-node app/main.ts",
+        "amman:start": "npx amman start",
         "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
         "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
     },
     "dependencies": {
         "@coral-xyz/anchor": "^0.28.0",
+        "@metaplex-foundation/amman": "^0.12.1",
         "@solana/spl-token": "^0.4.1"
     },
     "devDependencies": {

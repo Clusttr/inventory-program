@@ -4,4 +4,10 @@ use anchor_lang::prelude::*;
 pub enum InventoryError {
     #[msg("An invalid asset functions address provided")]
     InvalidAssetId,
+
+    #[msg("Not enough asset in inventory")]
+    InsufficientInventoryAsset,
+
+    #[msg("Not enough usdc to execute traction")]
+    InsufficientUSDC,
 }

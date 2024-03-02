@@ -40,6 +40,10 @@ pub mod inventory {
     ) -> Result<()> {
         instructions::update_asset_info(ctx, new_price, new_usdc_account)
     }
+
+    pub fn buy_asset(ctx: Context<BuyAsset>, amount: u64) -> Result<()> {
+        instructions::buy_asset(ctx, amount)
+    }
 }
 
 #[derive(Accounts)]
