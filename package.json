@@ -1,10 +1,17 @@
 {
     "scripts": {
+        "main": "ts-node app/main.ts",
         "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
         "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
     },
     "dependencies": {
         "@coral-xyz/anchor": "^0.28.0",
+        "@metaplex-foundation/mpl-token-metadata": "^3.2.0",
+        "@metaplex-foundation/umi": "^0.9.1",
+        "@metaplex-foundation/umi-bundle-defaults": "^0.9.1",
+        "@metaplex-foundation/umi-eddsa-web3js": "^0.9.1",
+        "@metaplex-foundation/umi-http-fetch": "^0.9.1",
+        "@metaplex-foundation/umi-rpc-web3js": "^0.9.1",
         "@solana/spl-token": "^0.4.1"
     },
     "devDependencies": {

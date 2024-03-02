@@ -3,7 +3,7 @@ import { Program } from "@coral-xyz/anchor";
 import { Inventory } from "../target/types/inventory";
 import {PublicKey} from "@solana/web3.js";
 import { assert } from "chai";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token"
+import {createMintToInstruction, getOrCreateAssociatedTokenAccount, TOKEN_PROGRAM_ID} from "@solana/spl-token"
 
 describe("inventory", () => {
   // Configure the client to use the local cluster.
@@ -88,7 +88,7 @@ describe("inventory", () => {
       assert(assetInfo.amount.eq(new anchor.BN(assetInfo.amount.toNumber())), `Expected ${amount_bn.toNumber()} but found ${assetInfo.price.toNumber()}`)
   });
 
-  it.only("close inventory", async () => {
+  it("close inventory", async () => {
       console.log({
           asset_info,
           inventory_info_address
@@ -104,7 +104,7 @@ describe("inventory", () => {
       assert(!inventory.assets.some(x => x.toString() === nft.toString()), "Failed to remove asset")
   })
 
-    it("should print accounts", async () => {
+    it.only("should print accounts", async () => {
         console.log({asset_info})
         const assetInfo = await program.account.assetInfo.fetch(asset_info)
         const inventory = await program.account.inventory.fetch(inventory_info_address)
@@ -112,5 +112,33 @@ describe("inventory", () => {
             assetInfo,
             inventory
         })
+    })
+
+    it("should mint some usdc", async () => {
+        const USDC_MINT = new anchor.web3.PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+        const provider = anchor.AnchorProvider.env()
+        // const payer = (provider.wallet as anchor.Wallet).payer;
+
+        assert.ok(payer.publicKey.toBase58() == provider.wallet.publicKey.toBase58())
+
+        let usdcTokenAccount = await getOrCreateAssociatedTokenAccount(
+            provider.connection,
+            payer.payer,
+            USDC_MINT,
+            payer.publicKey
+        )
+
+        const mintTokenTx = new anchor.web3.Transaction()
+        mintTokenTx.add(createMintToInstruction(
+            USDC_MINT,
+            usdcTokenAccount.address,
+            payer.publicKey,
+            1000 * 10 ** 6 //1000 usdc tokens
+        ))
+
+        await provider.sendAndConfirm(mintTokenTx)
+        const newBalance = await provider.connection.getTokenAccountBalance(usdcTokenAccount.address)
+        console.log({newBalance})
+        assert.equal(Number(newBalance.value.uiAmount), 1000)
     })
 });
