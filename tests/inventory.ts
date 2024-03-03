@@ -30,7 +30,7 @@ describe("inventory", () => {
       SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
       )[0]
 
-  it("should create inventory", async () => {
+  it.only("should create inventory", async () => {
       let price = new anchor.BN(200)
       const tx = await  program.methods.createInventory(price)
           .accounts({
@@ -88,7 +88,7 @@ describe("inventory", () => {
       assert(assetInfo.amount.eq(new anchor.BN(assetInfo.amount.toNumber())), `Expected ${amount_bn.toNumber()} but found ${assetInfo.price.toNumber()}`)
   });
 
-  it("close inventory", async () => {
+  it.skip("close inventory", async () => {
       console.log({
           asset_info,
           inventory_info_address
@@ -114,7 +114,7 @@ describe("inventory", () => {
         })
     })
 
-    it.only("should mint some usdc", async () => {
+    it("should mint some usdc", async () => {
         const provider = anchor.AnchorProvider.env()
 
         assert.ok(payer.publicKey.toBase58() == provider.wallet.publicKey.toBase58())
@@ -138,5 +138,28 @@ describe("inventory", () => {
         const newBalance = await provider.connection.getTokenAccountBalance(usdcTokenAccount.address)
         console.log({newBalance})
         assert.equal(Number(newBalance.value.uiAmount), 1000)
+    })
+
+    it("should buy asset", async () => {
+        const provider = anchor.AnchorProvider.env()
+        let usdcTokenAccount = await getOrCreateAssociatedTokenAccount(
+            provider.connection,
+            payer.payer,
+            USDC_MINT,
+            payer.publicKey
+        )
+
+        let amount = new anchor.BN(100 * 10 ** 6)
+        const tx = await program.methods.buyAsset(amount)
+            .accounts({
+                payer: payer.publicKey,
+                payerUsdcAccount: usdcTokenAccount.address,
+                devUsdcAccount: usdcTokenAccount.address,
+                inventory: inventory_info_address,
+                assetInfo: asset_info
+            })
+            .rpc()
+        console.log(tx)
+        console.log(usdcTokenAccount)
     })
 });

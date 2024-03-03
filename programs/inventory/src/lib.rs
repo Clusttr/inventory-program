@@ -6,7 +6,7 @@ use crate::state::Inventory;
 use anchor_lang::prelude::*;
 use instructions::*;
 
-declare_id!("8QW6oBt7NvXN68Cy7yjKUGa6rFPi5EtMmXrp8hoUmwpw");
+declare_id!("8oRGerutEMGTumnzzgxbsCEfLLkghC3cdT6EadZaPh3Q");
 
 #[program]
 pub mod inventory {
