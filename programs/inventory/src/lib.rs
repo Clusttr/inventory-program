@@ -2,7 +2,6 @@ mod instructions;
 mod state;
 mod utils;
 
-use crate::state::Inventory;
 use anchor_lang::prelude::*;
 use instructions::*;
 
@@ -13,8 +12,7 @@ pub mod inventory {
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        ctx.accounts.inventory.set_inner(Inventory::new());
-        Ok(())
+        instructions::initialize(ctx)
     }
 
     pub fn create_inventory(ctx: Context<CreateInventory>, price: u64) -> Result<()> {
@@ -44,20 +42,4 @@ pub mod inventory {
     pub fn buy_asset(ctx: Context<BuyAsset>, amount: u64) -> Result<()> {
         instructions::buy_asset(ctx, amount)
     }
-}
-
-#[derive(Accounts)]
-pub struct Initialize<'info> {
-    #[account(mut)]
-    pub payer: Signer<'info>,
-
-    #[account(
-    init,
-    payer = payer,
-    space = Inventory::SPACE,
-    seeds = [Inventory::SEED_PREFIX.as_bytes()],
-    bump,
-    )]
-    pub inventory: Account<'info, Inventory>,
-    pub system_program: Program<'info, System>,
 }

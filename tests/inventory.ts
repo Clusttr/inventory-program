@@ -1,9 +1,9 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
-import { Inventory } from "../target/types/inventory";
+import {Program} from "@coral-xyz/anchor";
+import {Inventory} from "../target/types/inventory";
 import {PublicKey} from "@solana/web3.js";
-import { assert } from "chai";
-import {createMintToInstruction, getOrCreateAssociatedTokenAccount, TOKEN_PROGRAM_ID} from "@solana/spl-token"
+import {assert} from "chai";
+import {getOrCreateAssociatedTokenAccount, TOKEN_PROGRAM_ID} from "@solana/spl-token"
 
 describe("inventory", () => {
   // Configure the client to use the local cluster.
@@ -12,7 +12,7 @@ describe("inventory", () => {
 
   const program = anchor.workspace.Inventory as Program<Inventory>;
   const USDC_MINT = new anchor.web3.PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
-  const nft = new PublicKey("DWDRomhCxYJhodb5vbYeYGZpLTSC9CFpoUEZ8W4CGaYd");
+  const nft = new PublicKey("Fnd3WMEGywcTjp3hdBnAepfJjcMJ2N1RwPpGqoV8Qsmp");
 
   const [inventory_info_address] = PublicKey.findProgramAddressSync(
       [Buffer.from("inventory")],
@@ -30,18 +30,40 @@ describe("inventory", () => {
       SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
       )[0]
 
-  it.only("should create inventory", async () => {
+    async function get_usdc_ata(keypair: anchor.web3.Keypair) {
+        const provider = anchor.AnchorProvider.env()
+        return await getOrCreateAssociatedTokenAccount(
+            provider.connection,
+            keypair,
+            USDC_MINT,
+            payer.publicKey
+        )
+    }
+
+
+    it.only("should initialize program", async () => {
+        const tx = await program.methods.initialize()
+            .accounts({
+                payer: payer.publicKey,
+                inventory: inventory_info_address
+            })
+            .rpc()
+    } )
+
+  it("should create inventory", async () => {
       let price = new anchor.BN(200)
+      const usdc_ata_ = (await get_usdc_ata(payer.payer)).address
       const tx = await  program.methods.createInventory(price)
           .accounts({
               payer: payer.publicKey,
               inventory: inventory_info_address,
               assetInfo: asset_info,
-              usdcAccount: usdc_ata,
+              usdcAccount: usdc_ata_,
               mint: nft,
               usdcMint: USDC_MINT,
           })
           .rpc()
+      console.log({usdc_ata})
   })
 
   it("should add asset", async () => {
@@ -88,7 +110,7 @@ describe("inventory", () => {
       assert(assetInfo.amount.eq(new anchor.BN(assetInfo.amount.toNumber())), `Expected ${amount_bn.toNumber()} but found ${assetInfo.price.toNumber()}`)
   });
 
-  it.skip("close inventory", async () => {
+  it("close inventory", async () => {
       console.log({
           asset_info,
           inventory_info_address
@@ -103,42 +125,6 @@ describe("inventory", () => {
       const inventory = await program.account.inventory.fetch(inventory_info_address)
       assert(!inventory.assets.some(x => x.toString() === nft.toString()), "Failed to remove asset")
   })
-
-    it("should print accounts", async () => {
-        console.log({asset_info})
-        const assetInfo = await program.account.assetInfo.fetch(asset_info)
-        const inventory = await program.account.inventory.fetch(inventory_info_address)
-        console.log({
-            assetInfo,
-            inventory
-        })
-    })
-
-    it("should mint some usdc", async () => {
-        const provider = anchor.AnchorProvider.env()
-
-        assert.ok(payer.publicKey.toBase58() == provider.wallet.publicKey.toBase58())
-
-        let usdcTokenAccount = await getOrCreateAssociatedTokenAccount(
-            provider.connection,
-            payer.payer,
-            USDC_MINT,
-            payer.publicKey
-        )
-
-        const mintTokenTx = new anchor.web3.Transaction()
-        mintTokenTx.add(createMintToInstruction(
-            USDC_MINT,
-            usdcTokenAccount.address,
-            payer.publicKey,
-            1000 * 10 ** 6 //1000 usdc tokens
-        ))
-
-        await provider.sendAndConfirm(mintTokenTx)
-        const newBalance = await provider.connection.getTokenAccountBalance(usdcTokenAccount.address)
-        console.log({newBalance})
-        assert.equal(Number(newBalance.value.uiAmount), 1000)
-    })
 
     it("should buy asset", async () => {
         const provider = anchor.AnchorProvider.env()
@@ -161,5 +147,15 @@ describe("inventory", () => {
             .rpc()
         console.log(tx)
         console.log(usdcTokenAccount)
+    })
+
+    it("should print accounts", async () => {
+        console.log({asset_info})
+        const assetInfo = await program.account.assetInfo.fetch(asset_info)
+        const inventory = await program.account.inventory.fetch(inventory_info_address)
+        console.log({
+            assetInfo,
+            inventory
+        })
     })
 });
