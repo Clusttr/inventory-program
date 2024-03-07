@@ -41,7 +41,7 @@ describe("inventory", () => {
     }
 
 
-    it.only("should initialize program", async () => {
+    it("should initialize program", async () => {
         const tx = await program.methods.initialize()
             .accounts({
                 payer: payer.publicKey,
@@ -110,46 +110,26 @@ describe("inventory", () => {
       assert(assetInfo.amount.eq(new anchor.BN(assetInfo.amount.toNumber())), `Expected ${amount_bn.toNumber()} but found ${assetInfo.price.toNumber()}`)
   });
 
-  it("close inventory", async () => {
-      console.log({
-          asset_info,
-          inventory_info_address
-      })
-      const _ = await program.methods.closeInventory()
-          .accounts({
-              payer: payer.publicKey,
-              assetInfo: asset_info,
-              inventory: inventory_info_address,
-              mint: nft
-          }).rpc()
-      const inventory = await program.account.inventory.fetch(inventory_info_address)
-      assert(!inventory.assets.some(x => x.toString() === nft.toString()), "Failed to remove asset")
-  })
-
     it("should buy asset", async () => {
         const provider = anchor.AnchorProvider.env()
-        let usdcTokenAccount = await getOrCreateAssociatedTokenAccount(
-            provider.connection,
-            payer.payer,
-            USDC_MINT,
-            payer.publicKey
-        )
+        const payerUsdcAccount = (await get_usdc_ata(payer.payer)).address
 
-        let amount = new anchor.BN(100 * 10 ** 6)
+        let amount = new anchor.BN(1)
         const tx = await program.methods.buyAsset(amount)
             .accounts({
                 payer: payer.publicKey,
-                payerUsdcAccount: usdcTokenAccount.address,
-                devUsdcAccount: usdcTokenAccount.address,
+                payerUsdcAccount,
+                devUsdcAccount: payerUsdcAccount,
                 inventory: inventory_info_address,
-                assetInfo: asset_info
+                assetInfo: asset_info,
+                usdcMint: USDC_MINT,
+                mint: nft
             })
             .rpc()
         console.log(tx)
-        console.log(usdcTokenAccount)
     })
 
-    it("should print accounts", async () => {
+    it.only("should print accounts", async () => {
         console.log({asset_info})
         const assetInfo = await program.account.assetInfo.fetch(asset_info)
         const inventory = await program.account.inventory.fetch(inventory_info_address)
@@ -158,4 +138,17 @@ describe("inventory", () => {
             inventory
         })
     })
+
+  it("close inventory", async () => {
+      const _ = await program.methods.closeInventory()
+          .accounts({
+              payer: payer.publicKey,
+              inventory: inventory_info_address,
+              assetInfo: asset_info,
+              mint: nft
+          }).rpc()
+      const inventory = await program.account.inventory.fetch(inventory_info_address)
+      assert(!inventory.assets.some(x => x.toString() === nft.toString()), "Failed to remove asset")
+  })
+
 });
