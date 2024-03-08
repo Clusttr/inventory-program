@@ -1,3 +1,3 @@
-pub mod decimals {
-    pub const USDC: u8 = 6;
+pub mod main_const {
+    pub const VAULT: &[u8] = b"vault";
 }

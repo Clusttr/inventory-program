@@ -10,4 +10,7 @@ pub enum InventoryError {
 
     #[msg("Not enough usdc to execute traction")]
     InsufficientUSDC,
+
+    #[msg("Not enough asset to deposit")]
+    InsufficientAsset,
 }

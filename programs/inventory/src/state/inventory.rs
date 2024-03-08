@@ -122,7 +122,7 @@ fn transfer_lamports<'info>(
 ///s
 /// For example, a token account with a balance of 10,500 for a mint with 3
 /// decimals would have a nominal balance of 10.5
-fn convert_to_float(value: u64, decimals: u8) -> f32 {
+fn _convert_to_float(value: u64, decimals: u8) -> f32 {
     (value as f32).div(f32::powf(10.0, decimals as f32))
 }
 
@@ -132,6 +132,6 @@ fn convert_to_float(value: u64, decimals: u8) -> f32 {
 ///
 /// For example, if `r` is calculated to be 10.5, the real amount of the asset
 /// to be received by the user is 10,500
-fn convert_from_float(value: f32, decimals: u8) -> u64 {
+fn _convert_from_float(value: f32, decimals: u8) -> u64 {
     value.mul(f32::powf(10.0, decimals as f32)) as u64
 }
