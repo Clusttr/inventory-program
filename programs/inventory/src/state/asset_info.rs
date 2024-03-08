@@ -1,4 +1,6 @@
+// use crate::utils::*;
 use anchor_lang::prelude::*;
+// use std::ops::Mul;
 
 #[account]
 pub struct AssetInfo {
@@ -10,6 +12,7 @@ pub struct AssetInfo {
 
 impl AssetInfo {
     pub fn new(asset_key: Pubkey, price: u64, usdc_remit_account: Pubkey) -> Self {
+        // let usdc_price: f64 = price.mul(10.pow(decimals::USDC));
         Self {
             asset_key,
             price,

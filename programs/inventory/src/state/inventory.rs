@@ -2,6 +2,7 @@ use crate::utils::InventoryError;
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
 use anchor_spl::token::Mint;
+use std::ops::{Div, Mul};
 
 #[account]
 pub struct Inventory {
@@ -113,4 +114,24 @@ fn transfer_lamports<'info>(
         ),
         amount,
     )
+}
+
+/// Converts a `u64` value - in this case the balance of a token account - into
+/// an `f32` by using the `decimals` value of its associated mint to get the
+/// nominal quantity of a mint stored in that token account
+///s
+/// For example, a token account with a balance of 10,500 for a mint with 3
+/// decimals would have a nominal balance of 10.5
+fn convert_to_float(value: u64, decimals: u8) -> f32 {
+    (value as f32).div(f32::powf(10.0, decimals as f32))
+}
+
+/// Converts a nominal value - in this case the calculated value `r` - into a
+/// `u64` by using the `decimals` value of its associated mint to get the real
+/// quantity of the mint that the user will receive
+///
+/// For example, if `r` is calculated to be 10.5, the real amount of the asset
+/// to be received by the user is 10,500
+fn convert_from_float(value: f32, decimals: u8) -> u64 {
+    value.mul(f32::powf(10.0, decimals as f32)) as u64
 }

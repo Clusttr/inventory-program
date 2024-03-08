@@ -5,11 +5,14 @@ use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 pub fn create_inventory(ctx: Context<CreateInventory>, price: u64) -> Result<()> {
-    let nft_mint = ctx.accounts.mint.key();
-    let usdc_account = ctx.accounts.usdc_account.key();
-    ctx.accounts
-        .asset_info
-        .set_inner(AssetInfo::new(nft_mint, price, usdc_account));
+    //create asset_info
+    ctx.accounts.asset_info.set_inner(AssetInfo::new(
+        ctx.accounts.mint.key(),
+        price,
+        ctx.accounts.usdc_account.key(),
+    ));
+
+    //add asset to inventory list
     ctx.accounts.inventory.insert_asset(
         &ctx.accounts.mint,
         &ctx.accounts.payer,
