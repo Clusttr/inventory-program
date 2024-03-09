@@ -15,8 +15,7 @@ pub fn add_asset(ctx: Context<AddAsset>, amount: u64) -> Result<()> {
         &ctx.accounts.payer,
         &mut ctx.accounts.inventory,
         &ctx.accounts.token_program,
-    )?;
-    Ok(())
+    )
 }
 
 #[derive(Accounts)]

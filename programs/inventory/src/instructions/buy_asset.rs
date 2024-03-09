@@ -1,39 +1,27 @@
-use crate::state::{AssetInfo, Inventory};
-use crate::utils::InventoryError;
+use crate::state::{AssetInfo, AssetInfoAccount, Inventory};
 use anchor_lang::prelude::*;
 use anchor_lang::Accounts;
-use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token::{Mint, Token, TokenAccount};
 
 pub fn buy_asset(ctx: Context<BuyAsset>, amount: u64) -> Result<()> {
-    let asset_info = &mut ctx.accounts.asset_info;
-    //check if there's enough
-    if amount > asset_info.amount {
-        return Err(InventoryError::InsufficientInventoryAsset.into());
-    }
-    //calculate cost
-    let cost = amount * asset_info.price;
+    let deposit = (
+        &ctx.accounts.usdc_mint,
+        &ctx.accounts.payer_usdc_account,
+        &ctx.accounts.dev_usdc_account,
+    );
+    let receive = (
+        &ctx.accounts.mint,
+        &ctx.accounts.mint_vault,
+        &ctx.accounts.payer_mint_account,
+    );
 
-    //check if user has enough balance
-    if cost > ctx.accounts.payer_usdc_account.amount {
-        return Err(InventoryError::InsufficientUSDC.into());
-    }
-
-    //transfer from payer to p.developer
-    transfer(
-        CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
-            Transfer {
-                from: ctx.accounts.payer_usdc_account.to_account_info(),
-                to: ctx.accounts.dev_usdc_account.to_account_info(),
-                authority: ctx.accounts.payer.to_account_info(),
-            },
-        ),
-        cost,
-    )?;
-    //transfer token to payer
-    // deduct amount of asset purchased
-    asset_info.amount -= amount;
-    Ok(())
+    ctx.accounts.asset_info.buy(
+        deposit,
+        receive,
+        amount,
+        &ctx.accounts.payer,
+        &ctx.accounts.token_program,
+    )
 }
 #[derive(Accounts)]
 pub struct BuyAsset<'info> {
@@ -46,6 +34,13 @@ pub struct BuyAsset<'info> {
         associated_token::authority = payer,
     )]
     pub payer_usdc_account: Account<'info, TokenAccount>,
+
+    #[account(
+    mut,
+    associated_token::mint = mint,
+    associated_token::authority = payer,
+    )]
+    pub payer_mint_account: Account<'info, TokenAccount>,
 
     #[account(
         associated_token::mint = usdc_mint,
@@ -67,6 +62,13 @@ pub struct BuyAsset<'info> {
     close = payer
     )]
     pub asset_info: Account<'info, AssetInfo>,
+
+    #[account(
+    mut,
+    token::mint = mint,
+    token::authority = mint_vault
+    )]
+    pub mint_vault: Account<'info, TokenAccount>,
 
     pub mint: Account<'info, Mint>,
     pub usdc_mint: Account<'info, Mint>,

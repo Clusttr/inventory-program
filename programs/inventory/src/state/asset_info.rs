@@ -1,6 +1,6 @@
 // use crate::utils::*;
 use crate::state::{Inventory, InventoryAccount};
-use crate::utils::InventoryError;
+use crate::utils::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
 // use anchor_spl::token_interface::TokenAccount;
@@ -44,6 +44,23 @@ pub trait AssetInfoAccount<'info> {
         inventory: &mut Account<'info, Inventory>,
         token_program: &Program<'info, Token>,
     ) -> Result<()>;
+
+    fn buy(
+        &mut self,
+        deposit: (
+            &Account<'info, Mint>,
+            &Account<'info, TokenAccount>,
+            &Account<'info, TokenAccount>,
+        ),
+        receive: (
+            &Account<'info, Mint>,
+            &Account<'info, TokenAccount>,
+            &Account<'info, TokenAccount>,
+        ),
+        amount: u64,
+        authority: &Signer<'info>,
+        token_program: &Program<'info, Token>,
+    ) -> Result<()>;
 }
 
 impl<'info> AssetInfoAccount<'info> for Account<'info, AssetInfo> {
@@ -83,6 +100,71 @@ impl<'info> AssetInfoAccount<'info> for Account<'info, AssetInfo> {
 
         //update asset_info
         self.amount += amount;
+        Ok(())
+    }
+
+    fn buy(
+        &mut self,
+        deposit: (
+            &Account<'info, Mint>,
+            &Account<'info, TokenAccount>,
+            &Account<'info, TokenAccount>,
+        ),
+        receive: (
+            &Account<'info, Mint>,
+            &Account<'info, TokenAccount>,
+            &Account<'info, TokenAccount>,
+        ),
+        amount: u64, //amount of assets user wishes to buy
+        authority: &Signer<'info>,
+        token_program: &Program<'info, Token>,
+    ) -> Result<()> {
+        let (_mint, from, to) = deposit;
+
+        //check if vault has enough asset
+        if self.amount < amount {
+            return Err(InventoryError::InsufficientInventoryAsset.into());
+        }
+
+        //calculate usd required
+        let total_cost = self.price * amount;
+
+        //check if user has enough usd
+        if total_cost > from.amount {
+            return Err(InventoryError::InsufficientUSDC.into());
+        }
+
+        //transfer usdc
+        transfer(
+            CpiContext::new(
+                token_program.to_account_info(),
+                Transfer {
+                    from: from.to_account_info(),
+                    to: to.to_account_info(),
+                    authority: authority.to_account_info(),
+                },
+            ),
+            total_cost,
+        )?;
+        //transfer asset,
+        let (mint, from, to) = receive;
+        let mint_key = mint.key();
+        let seed: &[&[&[u8]]] = &[&[main_const::VAULT, mint_key.as_ref(), authority.key.as_ref()]];
+        transfer(
+            CpiContext::new_with_signer(
+                token_program.to_account_info(),
+                Transfer {
+                    from: from.to_account_info(),
+                    to: to.to_account_info(),
+                    authority: from.to_account_info(),
+                },
+                seed,
+            ),
+            amount,
+        )?;
+
+        //subtract asset from asset_info
+        self.amount -= amount;
         Ok(())
     }
 }
