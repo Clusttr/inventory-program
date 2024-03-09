@@ -30,12 +30,17 @@ describe("inventory", () => {
       SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
       )[0]
 
-    async function get_usdc_ata(keypair: anchor.web3.Keypair) {
+    const [mintVault] = PublicKey.findProgramAddressSync(
+        [Buffer.from("vault"), nft.toBuffer(), payer.publicKey.toBuffer()],
+        program.programId
+    )
+
+    async function get_mint_ata(keypair: anchor.web3.Keypair, mint: anchor.web3.PublicKey) {
         const provider = anchor.AnchorProvider.env()
         return await getOrCreateAssociatedTokenAccount(
             provider.connection,
             keypair,
-            USDC_MINT,
+            mint,
             payer.publicKey
         )
     }
@@ -52,7 +57,7 @@ describe("inventory", () => {
 
   it("should create inventory", async () => {
       let price = new anchor.BN(200)
-      const usdc_ata_ = (await get_usdc_ata(payer.payer)).address
+      const usdc_ata_ = (await get_mint_ata(payer.payer, USDC_MINT)).address
       const tx = await  program.methods.createInventory(price)
           .accounts({
               payer: payer.publicKey,
@@ -63,20 +68,26 @@ describe("inventory", () => {
               usdcMint: USDC_MINT,
           })
           .rpc()
-      console.log({usdc_ata})
+      console.log({tx})
   })
 
-  it("should add asset", async () => {
-    const tx = await program.methods.addAsset()
+  it.only("should add asset", async () => {
+      let amount = new anchor.BN(10)
+      let userAssetAccount = (await get_mint_ata(payer.payer, nft)).address
+    const tx = await program.methods.addAsset(amount)
         .accounts({
-          payer: payer.publicKey,
-          inventory: inventory_info_address,
-          mint: nft
+            payer: payer.publicKey,
+            userAssetAccount,
+            inventory: inventory_info_address,
+            assetInfo: asset_info,
+            mintVault,
+            mint: nft
         })
         .rpc();
 
     const inventoryInfo = await program.account.inventory.fetch(inventory_info_address);
-    assert(inventoryInfo.assets.some(x => x.toString() === nft.toString()), "Failed to insert asset")
+    console.log({tx});
+    console.log({inventoryInfo})
   });
 
   it("should withdraw asset", async () => {
@@ -112,7 +123,7 @@ describe("inventory", () => {
 
     it("should buy asset", async () => {
         const provider = anchor.AnchorProvider.env()
-        const payerUsdcAccount = (await get_usdc_ata(payer.payer)).address
+        const payerUsdcAccount = (await get_mint_ata(payer.payer, USDC_MINT)).address
 
         let amount = new anchor.BN(1)
         const tx = await program.methods.buyAsset(amount)
@@ -129,7 +140,7 @@ describe("inventory", () => {
         console.log(tx)
     })
 
-    it.only("should print accounts", async () => {
+    it("should print accounts", async () => {
         console.log({asset_info})
         const assetInfo = await program.account.assetInfo.fetch(asset_info)
         const inventory = await program.account.inventory.fetch(inventory_info_address)

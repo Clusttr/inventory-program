@@ -47,11 +47,11 @@ pub struct AddAsset<'info> {
 
     #[account(
     init_if_needed,
-    seeds = [main_const::VAULT, mint.key().as_ref()],
+    seeds = [main_const::VAULT, mint.key().as_ref(), payer.key().as_ref()],
     bump,
     payer = payer,
     token::mint = mint,
-    token::authority = payer
+    token::authority = mint_vault
     )]
     pub mint_vault: Account<'info, TokenAccount>,
     pub mint: Account<'info, Mint>,
