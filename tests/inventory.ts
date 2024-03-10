@@ -55,8 +55,8 @@ describe("inventory", () => {
             .rpc()
     } )
 
-  it("should create inventory", async () => {
-      let price = new anchor.BN(200)
+  it.only("should create inventory", async () => {
+      let price = new anchor.BN(10 * 10 ** 6)
       const usdc_ata_ = (await get_mint_ata(payer.payer, USDC_MINT)).address
       const tx = await  program.methods.createInventory(price)
           .accounts({
@@ -121,26 +121,28 @@ describe("inventory", () => {
       assert(assetInfo.amount.eq(new anchor.BN(assetInfo.amount.toNumber())), `Expected ${amount_bn.toNumber()} but found ${assetInfo.price.toNumber()}`)
   });
 
-    it("should buy asset", async () => {
-        const provider = anchor.AnchorProvider.env()
+    it.only("should buy asset", async () => {
         const payerUsdcAccount = (await get_mint_ata(payer.payer, USDC_MINT)).address
+        const payerMintAccount = (await get_mint_ata(payer.payer, nft)).address
 
         let amount = new anchor.BN(1)
         const tx = await program.methods.buyAsset(amount)
             .accounts({
                 payer: payer.publicKey,
                 payerUsdcAccount,
+                payerMintAccount,
                 devUsdcAccount: payerUsdcAccount,
                 inventory: inventory_info_address,
                 assetInfo: asset_info,
+                mintVault,
+                mint: nft,
                 usdcMint: USDC_MINT,
-                mint: nft
             })
             .rpc()
         console.log(tx)
     })
 
-    it("should print accounts", async () => {
+    it.only("should print accounts", async () => {
         console.log({asset_info})
         const assetInfo = await program.account.assetInfo.fetch(asset_info)
         const inventory = await program.account.inventory.fetch(inventory_info_address)

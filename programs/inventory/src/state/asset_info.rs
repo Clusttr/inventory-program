@@ -56,6 +56,7 @@ pub trait AssetInfoAccount<'info> {
             &Account<'info, Mint>,
             &Account<'info, TokenAccount>,
             &Account<'info, TokenAccount>,
+            u8,
         ),
         amount: u64,
         authority: &Signer<'info>,
@@ -114,6 +115,7 @@ impl<'info> AssetInfoAccount<'info> for Account<'info, AssetInfo> {
             &Account<'info, Mint>,
             &Account<'info, TokenAccount>,
             &Account<'info, TokenAccount>,
+            u8,
         ),
         amount: u64, //amount of assets user wishes to buy
         authority: &Signer<'info>,
@@ -147,9 +149,14 @@ impl<'info> AssetInfoAccount<'info> for Account<'info, AssetInfo> {
             total_cost,
         )?;
         //transfer asset,
-        let (mint, from, to) = receive;
+        let (mint, from, to, bump) = receive;
         let mint_key = mint.key();
-        let seed: &[&[&[u8]]] = &[&[main_const::VAULT, mint_key.as_ref(), authority.key.as_ref()]];
+        let seed: &[&[&[u8]]] = &[&[
+            main_const::VAULT,
+            mint_key.as_ref(),
+            authority.key.as_ref(),
+            &[bump],
+        ]];
         transfer(
             CpiContext::new_with_signer(
                 token_program.to_account_info(),

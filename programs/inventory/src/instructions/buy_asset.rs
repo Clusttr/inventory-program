@@ -1,4 +1,5 @@
 use crate::state::{AssetInfo, AssetInfoAccount, Inventory};
+use crate::utils::*;
 use anchor_lang::prelude::*;
 use anchor_lang::Accounts;
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -13,6 +14,7 @@ pub fn buy_asset(ctx: Context<BuyAsset>, amount: u64) -> Result<()> {
         &ctx.accounts.mint,
         &ctx.accounts.mint_vault,
         &ctx.accounts.payer_mint_account,
+        ctx.bumps.mint_vault,
     );
 
     ctx.accounts.asset_info.buy(
@@ -43,6 +45,7 @@ pub struct BuyAsset<'info> {
     pub payer_mint_account: Account<'info, TokenAccount>,
 
     #[account(
+        mut,
         associated_token::mint = usdc_mint,
         associated_token::authority = payer,
     )]
@@ -59,14 +62,13 @@ pub struct BuyAsset<'info> {
     mut,
     seeds = [AssetInfo::SEED_PREFIX.as_bytes(), mint.key().as_ref()],
     bump,
-    close = payer
     )]
     pub asset_info: Account<'info, AssetInfo>,
 
     #[account(
     mut,
-    token::mint = mint,
-    token::authority = mint_vault
+    seeds = [main_const::VAULT, mint.key().as_ref(), payer.key().as_ref()],
+    bump
     )]
     pub mint_vault: Account<'info, TokenAccount>,
 
