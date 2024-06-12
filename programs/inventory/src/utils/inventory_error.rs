@@ -13,4 +13,7 @@ pub enum InventoryError {
 
     #[msg("Not enough asset to deposit")]
     InsufficientAsset,
+
+    #[msg("Inventory vault not needs to be emptied")]
+    InventoryVaultNotEmpty,
 }

@@ -10,7 +10,7 @@ use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
 pub struct AssetInfo {
     pub asset_key: Pubkey,
     pub price: u64,
-    pub amount: u64,
+    // pub amount: u64,
     pub usdc_remit_account: Pubkey,
 }
 
@@ -20,7 +20,7 @@ impl AssetInfo {
         Self {
             asset_key,
             price,
-            amount: 0,
+            // amount: 0,
             usdc_remit_account,
         }
     }
@@ -48,7 +48,6 @@ pub trait AssetInfoAccount<'info> {
     fn buy(
         &mut self,
         deposit: (
-            &Account<'info, Mint>,
             &Account<'info, TokenAccount>,
             &Account<'info, TokenAccount>,
         ),
@@ -78,6 +77,7 @@ impl<'info> AssetInfoAccount<'info> for Account<'info, AssetInfo> {
         token_program: &Program<'info, Token>,
     ) -> Result<()> {
         let (mint, from, to, amount) = deposit;
+
         //check if asset is in inventory
         inventory.check_asset(&mint.key())?;
 
@@ -98,16 +98,12 @@ impl<'info> AssetInfoAccount<'info> for Account<'info, AssetInfo> {
             ),
             amount,
         )?;
-
-        //update asset_info
-        self.amount += amount;
         Ok(())
     }
 
     fn buy(
         &mut self,
         deposit: (
-            &Account<'info, Mint>,
             &Account<'info, TokenAccount>,
             &Account<'info, TokenAccount>,
         ),
@@ -121,10 +117,14 @@ impl<'info> AssetInfoAccount<'info> for Account<'info, AssetInfo> {
         authority: &Signer<'info>,
         token_program: &Program<'info, Token>,
     ) -> Result<()> {
-        let (_mint, from, to) = deposit;
+        let (user_wallet, merchant_wallet) = deposit;
+        let (asset_mint,
+            asset_vault,
+            buyer_asset_address,
+            vault_bump) = receive;
 
-        //check if vault has enough asset
-        if self.amount < amount {
+        // check if vault has enough asset
+        if asset_vault.amount < amount {
             return Err(InventoryError::InsufficientInventoryAsset.into());
         }
 
@@ -132,46 +132,43 @@ impl<'info> AssetInfoAccount<'info> for Account<'info, AssetInfo> {
         let total_cost = self.price * amount;
 
         //check if user has enough usd
-        if total_cost > from.amount {
+        if user_wallet.amount < total_cost {
             return Err(InventoryError::InsufficientUSDC.into());
         }
 
-        //transfer usdc
+        // transfer usdc
         transfer(
             CpiContext::new(
                 token_program.to_account_info(),
                 Transfer {
-                    from: from.to_account_info(),
-                    to: to.to_account_info(),
+                    from: user_wallet.to_account_info(),
+                    to: merchant_wallet.to_account_info(),
                     authority: authority.to_account_info(),
                 },
             ),
             total_cost,
         )?;
-        //transfer asset,
-        let (mint, from, to, bump) = receive;
-        let mint_key = mint.key();
+
+        // transfer asset,
+        let mint_key = asset_mint.key();
         let seed: &[&[&[u8]]] = &[&[
             main_const::VAULT,
             mint_key.as_ref(),
             authority.key.as_ref(),
-            &[bump],
+            &[vault_bump],
         ]];
         transfer(
             CpiContext::new_with_signer(
                 token_program.to_account_info(),
                 Transfer {
-                    from: from.to_account_info(),
-                    to: to.to_account_info(),
-                    authority: from.to_account_info(),
+                    from: asset_vault.to_account_info(),
+                    to: buyer_asset_address.to_account_info(),
+                    authority: asset_vault.to_account_info(),
                 },
                 seed,
             ),
             amount,
         )?;
-
-        //subtract asset from asset_info
-        self.amount -= amount;
         Ok(())
     }
 }
