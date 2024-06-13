@@ -5,7 +5,7 @@ mod utils;
 use anchor_lang::prelude::*;
 use instructions::*;
 
-declare_id!("8oRGerutEMGTumnzzgxbsCEfLLkghC3cdT6EadZaPh3Q");
+declare_id!("E32BnY3pjAnTGo98BGS5cqYF45C8nHdDnCWD4GRmALja");
 
 #[program]
 pub mod inventory {

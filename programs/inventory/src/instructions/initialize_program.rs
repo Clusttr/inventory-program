@@ -10,11 +10,11 @@ pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub signer: Signer<'info>,
 
     #[account(
     init,
-    payer = payer,
+    payer = signer,
     space = Inventory::SPACE,
     seeds = [Inventory::SEED_PREFIX.as_bytes()],
     bump,
