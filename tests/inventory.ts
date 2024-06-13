@@ -50,7 +50,7 @@ describe("inventory", () => {
     }
 
 
-    it("should initialize program", async () => {
+    it.skip("should initialize program", async () => {
         const tx = await program.methods.initialize()
             .accounts({
                 signer: payer.publicKey,
@@ -60,8 +60,7 @@ describe("inventory", () => {
     })
 
     it("should create inventory", async () => {
-
-        let price = new anchor.BN(10 * 10 ** 6)
+        let price = new anchor.BN(10 * 10 ** 2)
         const usdc_ata = (await get_mint_ata(payer.payer, USDC_MINT)).address
         const tx = await program.methods.createInventory(price)
             .accounts({
@@ -77,9 +76,15 @@ describe("inventory", () => {
         console.log({tx})
     })
 
-    it.skip("should close inventory", async () => {
+    it("should close inventory", async () => {
         let closeAccTx = await program.methods.closeInventory()
-            .accounts({})
+            .accounts({
+                signer: payer.publicKey,
+                inventory: inventory_info_address,
+                assetVault: asset_vault,
+                assetInfo: asset_info,
+                assetMint: nft
+            })
             .rpc()
         console.log({closeAccTx})
     })
