@@ -34,9 +34,8 @@ pub mod inventory {
     pub fn update_asset_info(
         ctx: Context<UpdateAssetInfo>,
         new_price: u64,
-        new_usdc_account: Pubkey,
     ) -> Result<()> {
-        instructions::update_asset_info(ctx, new_price, new_usdc_account)
+        instructions::update_asset_info(ctx, new_price)
     }
 
     pub fn buy_asset(ctx: Context<BuyAsset>, amount: u64) -> Result<()> {
