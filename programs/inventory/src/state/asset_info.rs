@@ -6,7 +6,6 @@ use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
 pub struct AssetInfo {
     pub asset_key: Pubkey,
     pub price: u64,
-    // pub amount: u64,
     pub usdc_remit_account: Pubkey,
 }
 
