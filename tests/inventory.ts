@@ -108,17 +108,20 @@ describe("inventory", () => {
     });
 
     /// start local validator cmd: solana-test-validator -r --account EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v clones/usdc.json  --account Fnd3WMEGywcTjp3hdBnAepfJjcMJ2N1RwPpGqoV8Qsmp clones/lotus.json
-    // it("should withdraw asset", async () => {
-    //     const _ = await program.methods.withdrawAsset()
-    //         .accounts({
-    //             payer: payer.publicKey,
-    //             inventory: inventory_info_address,
-    //             mint: nft
-    //         })
-    //         .rpc()
-    //     const inventoryInfo = await program.account.inventory.fetch(inventory_info_address);
-    //     assert(!inventoryInfo.assets.some(x => x.toString() === nft.toString()), "Failed to remove asset")
-    // });
+    it("should withdraw asset", async () => {
+        let amount = new anchor.BN(5)
+        let userAssetAccount = (await get_mint_ata(payer.payer, nft)).address
+        const _ = await program.methods.withdrawAsset(amount)
+            .accounts({
+                signer: payer.publicKey,
+                userAssetAccount,
+                assetVault: asset_vault,
+                assetMint: nft
+            })
+            .rpc()
+        const inventoryInfo = await program.account.inventory.fetch(inventory_info_address);
+        assert(!inventoryInfo.assets.some(x => x.toString() === nft.toString()), "Failed to remove asset")
+    });
     //
     // it("should update asset", async () => {
     //     let amount_bn = new anchor.BN(60)
@@ -158,15 +161,5 @@ describe("inventory", () => {
     //         })
     //         .rpc()
     //     console.log(tx)
-    // })
-    //
-    // it.only("should print accounts", async () => {
-    //     console.log({asset_info})
-    //     const assetInfo = await program.account.assetInfo.fetch(asset_info)
-    //     const inventory = await program.account.inventory.fetch(inventory_info_address)
-    //     console.log({
-    //         assetInfo,
-    //         inventory
-    //     })
     // })
 });

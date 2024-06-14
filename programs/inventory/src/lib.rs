@@ -27,8 +27,8 @@ pub mod inventory {
         instructions::add_asset(ctx, amount)
     }
 
-    pub fn withdraw_asset(ctx: Context<WithdrawAsset>) -> Result<()> {
-        instructions::withdraw_asset(ctx)
+    pub fn withdraw_asset(ctx: Context<WithdrawAsset>, amount: u64) -> Result<()> {
+        instructions::withdraw_asset(ctx, amount)
     }
 
     pub fn update_asset_info(
