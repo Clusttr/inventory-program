@@ -1,32 +1,9 @@
 use std::str::FromStr;
-use crate::state::{AssetInfo, AssetInfoAccount, Inventory};
+use crate::state::{AssetInfo, AssetInfoAccount};
 use crate::utils::*;
 use anchor_lang::prelude::*;
 use anchor_lang::Accounts;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-
-pub fn buy_asset(ctx: Context<BuyAsset>, amount: u64) -> Result<()> {
-    require_keys_eq!(ctx.accounts.usdc_mint.key(), Pubkey::from_str(main_const::USDC).unwrap());
-
-    let deposit = (
-        &ctx.accounts.buyer_usdc_account,
-        &ctx.accounts.dev_usdc_account,
-    );
-    let receive = (
-        &ctx.accounts.asset_mint,
-        &ctx.accounts.mint_vault,
-        &ctx.accounts.buyer_asset_account,
-        ctx.bumps.mint_vault,
-    );
-
-    ctx.accounts.asset_info.buy(
-        deposit,
-        receive,
-        amount,
-        &ctx.accounts.signer,
-        &ctx.accounts.token_program,
-    )
-}
 
 #[derive(Accounts)]
 pub struct BuyAsset<'info> {
@@ -47,19 +24,15 @@ pub struct BuyAsset<'info> {
     )]
     pub buyer_asset_account: Account<'info, TokenAccount>,
 
-    #[account(
-    mut,
-    associated_token::mint = usdc_mint,
-    associated_token::authority = signer,
-    )]
-    pub dev_usdc_account: Account<'info, TokenAccount>,
+    #[account()]
+    pub merchant_usdc_account: Account<'info, TokenAccount>,
 
     #[account(
     mut,
-    seeds = [Inventory::SEED_PREFIX.as_bytes()],
+    seeds = [main_const::VAULT, asset_mint.key().as_ref()],
     bump,
     )]
-    pub inventory: Account<'info, Inventory>,
+    pub asset_vault: Account<'info, TokenAccount>,
 
     #[account(
     mut,
@@ -68,15 +41,31 @@ pub struct BuyAsset<'info> {
     )]
     pub asset_info: Account<'info, AssetInfo>,
 
-    #[account(
-    mut,
-    seeds = [main_const::VAULT, asset_mint.key().as_ref(), signer.key().as_ref()],
-    bump
-    )]
-    pub mint_vault: Account<'info, TokenAccount>,
     pub asset_mint: Account<'info, Mint>,
-
     pub usdc_mint: Account<'info, Mint>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
+}
+
+pub fn buy_asset(ctx: Context<BuyAsset>, amount: u64) -> Result<()> {
+    require_keys_eq!(ctx.accounts.usdc_mint.key(), Pubkey::from_str(main_const::USDC).unwrap());
+
+    let deposit = (
+        &ctx.accounts.buyer_usdc_account,
+        &ctx.accounts.merchant_usdc_account,
+    );
+    let receive = (
+        &ctx.accounts.asset_mint,
+        &ctx.accounts.asset_vault,
+        &ctx.accounts.buyer_asset_account,
+        ctx.bumps.asset_vault,
+    );
+
+    ctx.accounts.asset_info.buy(
+        deposit,
+        receive,
+        amount,
+        &ctx.accounts.signer,
+        &ctx.accounts.token_program,
+    )
 }

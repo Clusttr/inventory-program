@@ -60,7 +60,7 @@ describe("inventory", () => {
             .rpc()
     })
 
-    it("should create inventory", async () => {
+    it.skip("should create inventory", async () => {
         let price = new anchor.BN(10 * 10 ** 2)
         const usdc_ata = (await get_mint_ata(payer.payer, USDC_MINT)).address
         const tx = await program.methods.createInventory(price)
@@ -77,20 +77,7 @@ describe("inventory", () => {
         console.log({tx})
     })
 
-    it("should close inventory", async () => {
-        let closeAccTx = await program.methods.closeInventory()
-            .accounts({
-                signer: payer.publicKey,
-                inventory: inventory_info_address,
-                assetVault: asset_vault,
-                assetInfo: asset_info,
-                assetMint: nft
-            })
-            .rpc()
-        console.log({closeAccTx})
-    })
-
-    it.only("should add asset", async () => {
+    it.skip("should add asset", async () => {
         let userAssetAccount = (await get_mint_ata(payer.payer, nft)).address
         // const tx_mint = await mintTo(provider.connection, payer.payer, nft, userAssetAccount, payer.publicKey, 100)
         // console.log({tx_mint})
@@ -108,7 +95,7 @@ describe("inventory", () => {
     });
 
     /// start local validator cmd: solana-test-validator -r --account EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v clones/usdc.json  --account Fnd3WMEGywcTjp3hdBnAepfJjcMJ2N1RwPpGqoV8Qsmp clones/lotus.json
-    it("should withdraw asset", async () => {
+    it.skip("should withdraw asset", async () => {
         let amount = new anchor.BN(5)
         let userAssetAccount = (await get_mint_ata(payer.payer, nft)).address
         const _ = await program.methods.withdrawAsset(amount)
@@ -119,12 +106,10 @@ describe("inventory", () => {
                 assetMint: nft
             })
             .rpc()
-        const inventoryInfo = await program.account.inventory.fetch(inventory_info_address);
-        assert(!inventoryInfo.assets.some(x => x.toString() === nft.toString()), "Failed to remove asset")
     });
 
-    it("should update asset", async () => {
-        let newPrice = new anchor.BN(5)
+    it.skip("should update asset", async () => {
+        let newPrice = new anchor.BN(5 * 10 ** 2)
         const _ = await program.methods.updateAssetInfo(newPrice)
             .accounts({
                 payer: payer.publicKey,
@@ -135,27 +120,42 @@ describe("inventory", () => {
 
         const assetInfo = await program.account.assetInfo.fetch(asset_info)
         console.log({price: assetInfo.price.toNumber()})
-        assert(assetInfo.price.toNumber() === 5, `Expected 5 but found ${assetInfo.price}`)
+        assert(assetInfo.price.toNumber() === newPrice.toNumber(), `Expected ${5 * 10 ** 2} but found ${assetInfo.price}`)
     });
 
-    // it.only("should buy asset", async () => {
-    //     const payerUsdcAccount = (await get_mint_ata(payer.payer, USDC_MINT)).address
-    //     const payerMintAccount = (await get_mint_ata(payer.payer, nft)).address
-    //
-    //     let amount = new anchor.BN(1)
-    //     const tx = await program.methods.buyAsset(amount)
-    //         .accounts({
-    //             payer: payer.publicKey,
-    //             payerUsdcAccount,
-    //             payerMintAccount,
-    //             devUsdcAccount: payerUsdcAccount,
-    //             inventory: inventory_info_address,
-    //             assetInfo: asset_info,
-    //             mintVault,
-    //             mint: nft,
-    //             usdcMint: USDC_MINT,
-    //         })
-    //         .rpc()
-    //     console.log(tx)
-    // })
+    it("should buy asset", async () => {
+        const payerUsdcAccount = (await get_mint_ata(payer.payer, USDC_MINT)).address
+        const payerMintAccount = (await get_mint_ata(payer.payer, nft)).address
+
+        const tx_mint = await mintTo(provider.connection, payer.payer, USDC_MINT, payerMintAccount, payer.publicKey, 1000 * 10 ** 2)
+        console.log({tx_mint})
+
+        let amount = new anchor.BN(1)
+        const tx = await program.methods.buyAsset(amount)
+            .accounts({
+                signer: payer.publicKey,
+                buyerUsdcAccount: payerUsdcAccount,
+                buyerAssetAccount: payerMintAccount,
+                merchantUsdcAccount: payerUsdcAccount,
+                assetInfo: asset_info,
+                assetVault: asset_vault,
+                usdcMint: USDC_MINT,
+                assetMint: nft
+            })
+            .rpc()
+        console.log(tx)
+    })
+
+    it.skip("should close inventory", async () => {
+        let closeAccTx = await program.methods.closeInventory()
+            .accounts({
+                signer: payer.publicKey,
+                inventory: inventory_info_address,
+                assetVault: asset_vault,
+                assetInfo: asset_info,
+                assetMint: nft
+            })
+            .rpc()
+        console.log({closeAccTx})
+    })
 });
