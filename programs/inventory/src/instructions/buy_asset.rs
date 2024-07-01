@@ -41,13 +41,12 @@ pub struct BuyAsset<'info> {
     )]
     pub asset_info: Account<'info, AssetInfo>,
     /// CHECK: will add verification later
-    // #[account(
-    //     seeds = [asset_mint.key().as_ref()],
-    //     bump
-    // )]
     pub asset_price: AccountInfo<'info>,
 
     pub asset_mint: Account<'info, Mint>,
+    #[account(
+        address = Pubkey::from_str(main_const::USDC).unwrap()
+    )]
     pub usdc_mint: Account<'info, Mint>,
 
     /// CHECK: this is the program address for clusttr price oracle
@@ -60,8 +59,8 @@ pub struct BuyAsset<'info> {
 }
 
 pub fn buy_asset(ctx: Context<BuyAsset>, amount: u64) -> Result<()> {
-    require_keys_eq!(ctx.accounts.usdc_mint.key(), Pubkey::from_str(main_const::USDC).unwrap());
-    // let (_pda, _) = Pubkey::find_program_address(&[ctx.accounts.asset_mint.key().as_ref()], &ctx.accounts.price_oracle.key());
+    let (pda, _) = Pubkey::find_program_address(&[ctx.accounts.asset_mint.key().as_ref()], &ctx.accounts.price_oracle.key());
+    require_keys_eq!(ctx.accounts.asset_price.key(), pda, InventoryError::InvalidPriceAddress);
     let asset = Asset::from_account_info(&ctx.accounts.asset_price);
 
     let deposit = (

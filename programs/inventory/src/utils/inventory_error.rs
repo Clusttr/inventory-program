@@ -14,6 +14,12 @@ pub enum InventoryError {
     #[msg("Not enough asset to deposit")]
     InsufficientAsset,
 
-    #[msg("Inventory vault not needs to be emptied")]
+    #[msg("Inventory vault needs to be emptied")]
     InventoryVaultNotEmpty,
+
+    #[msg("Invalid usdc mint")]
+    InvalidUSDCMint,
+
+    #[msg("Invalid price address from oracle")]
+    InvalidPriceAddress,
 }

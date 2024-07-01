@@ -115,22 +115,7 @@ describe("inventory", () => {
             .rpc()
     });
 
-    it.skip("should update asset", async () => {
-        let newPrice = new anchor.BN(5 * 10 ** 2)
-        const _ = await program.methods.updateAssetInfo(newPrice)
-            .accounts({
-                payer: payer.publicKey,
-                assetInfo: asset_info,
-                mint: nft
-            })
-            .rpc()
-
-        const assetInfo = await program.account.assetInfo.fetch(asset_info)
-        // console.log({price: assetInfo.price.toNumber()})
-        // assert(assetInfo.price.toNumber() === newPrice.toNumber(), `Expected ${5 * 10 ** 2} but found ${assetInfo.price}`)
-    });
-
-    it("should buy asset", async () => {
+    it.skip("should buy asset", async () => {
         const payerUsdcAccount = (await get_mint_ata(payer.payer, USDC_MINT)).address
         const payerMintAccount = (await get_mint_ata(payer.payer, nft)).address
 
@@ -155,7 +140,7 @@ describe("inventory", () => {
         console.log({buy_tx})
     })
 
-    it.skip("should close inventory", async () => {
+    it("should close inventory", async () => {
         let closeAccTx = await program.methods.closeInventory()
             .accounts({
                 signer: payer.publicKey,

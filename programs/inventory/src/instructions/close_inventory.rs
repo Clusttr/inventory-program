@@ -9,24 +9,24 @@ pub struct CloseInventory<'info> {
     pub signer: Signer<'info>,
 
     #[account(
-    mut,
-    seeds = [Inventory::SEED_PREFIX.as_bytes()],
-    bump,
+        mut,
+        seeds = [Inventory::SEED_PREFIX.as_bytes()],
+        bump,
     )]
     pub inventory: Account<'info, Inventory>,
 
     #[account(
-    mut,
-    seeds = [main_const::VAULT, asset_mint.key().as_ref()],
-    bump,
+        mut,
+        seeds = [main_const::VAULT, asset_mint.key().as_ref()],
+        bump,
     )]
     pub asset_vault: Account<'info, TokenAccount>,
 
     #[account(
-    mut,
-    seeds = [AssetInfo::SEED_PREFIX.as_bytes(), asset_mint.key().as_ref()],
-    bump,
-    close = signer
+        mut,
+        seeds = [AssetInfo::SEED_PREFIX.as_bytes(), asset_mint.key().as_ref()],
+        bump,
+        close = signer
     )]
     pub asset_info: Account<'info, AssetInfo>,
     pub asset_mint: Account<'info, Mint>,
@@ -35,7 +35,7 @@ pub struct CloseInventory<'info> {
 }
 
 pub fn close_inventory(ctx: Context<CloseInventory>) -> Result<()> {
-    // require!(ctx.accounts.asset_vault.amount == 0, InventoryError::InventoryVaultNotEmpty);
+    require!(ctx.accounts.asset_vault.amount == 0, InventoryError::InventoryVaultNotEmpty);
 
     let mint_key = &ctx.accounts.asset_mint.key();
     let asset_vault_seed: &[&[&[u8]]] = &[&[main_const::VAULT, mint_key.as_ref(), &[ctx.bumps.asset_vault]]];
