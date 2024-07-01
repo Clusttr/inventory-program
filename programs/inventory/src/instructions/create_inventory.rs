@@ -11,36 +11,36 @@ pub struct CreateInventory<'info> {
     pub signer: Signer<'info>,
 
     #[account(
-    init_if_needed,
-    payer = signer,
-    associated_token::mint = usdc_mint,
-    associated_token::authority = signer
+        init_if_needed,
+        payer = signer,
+        associated_token::mint = usdc_mint,
+        associated_token::authority = signer
     )]
     pub merchant_usdc_account: Account<'info, TokenAccount>,
 
     #[account(
-    mut,
-    seeds = [Inventory::SEED_PREFIX.as_bytes()],
-    bump,
+        mut,
+        seeds = [Inventory::SEED_PREFIX.as_bytes()],
+        bump,
     )]
     pub inventory: Account<'info, Inventory>,
 
     #[account(
-    init_if_needed,
-    payer = signer,
-    space = 8 + AssetInfo::SPACE,
-    seeds = [AssetInfo::SEED_PREFIX.as_bytes(), asset_mint.key().as_ref()],
-    bump,
+        init_if_needed,
+        payer = signer,
+        space = 8 + AssetInfo::SPACE,
+        seeds = [AssetInfo::SEED_PREFIX.as_bytes(), asset_mint.key().as_ref()],
+        bump,
     )]
     pub asset_info: Account<'info, AssetInfo>,
 
     #[account(
-    init_if_needed,
-    seeds = [main_const::VAULT, asset_mint.key().as_ref()],
-    bump,
-    payer = signer,
-    token::mint = asset_mint,
-    token::authority = asset_vault
+        init_if_needed,
+        seeds = [main_const::VAULT, asset_mint.key().as_ref()],
+        bump,
+        payer = signer,
+        token::mint = asset_mint,
+        token::authority = asset_vault
     )]
     pub asset_vault: Account<'info, TokenAccount>,
 
@@ -52,11 +52,10 @@ pub struct CreateInventory<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
-pub fn create_inventory(ctx: Context<CreateInventory>, price: u64) -> Result<()> {
+pub fn create_inventory(ctx: Context<CreateInventory>) -> Result<()> {
     //create asset_info
     ctx.accounts.asset_info.set_inner(AssetInfo::new(
         ctx.accounts.asset_mint.key(),
-        price,
         ctx.accounts.merchant_usdc_account.key(),
     ));
 

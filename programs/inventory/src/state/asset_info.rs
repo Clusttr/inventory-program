@@ -5,17 +5,13 @@ use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
 #[account]
 pub struct AssetInfo {
     pub asset_key: Pubkey,
-    pub price: u64,
     pub usdc_remit_account: Pubkey,
 }
 
 impl AssetInfo {
-    pub fn new(asset_key: Pubkey, price: u64, usdc_remit_account: Pubkey) -> Self {
-        // let usdc_price: f64 = price.mul(10.pow(decimals::USDC));
+    pub fn new(asset_key: Pubkey, usdc_remit_account: Pubkey) -> Self {
         Self {
             asset_key,
-            price,
-            // amount: 0,
             usdc_remit_account,
         }
     }
@@ -39,6 +35,7 @@ pub trait AssetInfoAccount<'info> {
             &Account<'info, TokenAccount>,
             u8,
         ),
+        price: u64,
         amount: u64,
         authority: &Signer<'info>,
         token_program: &Program<'info, Token>,
@@ -58,6 +55,7 @@ impl<'info> AssetInfoAccount<'info> for Account<'info, AssetInfo> {
             &Account<'info, TokenAccount>,
             u8,
         ),
+        price: u64,
         amount: u64, //amount of assets user wishes to buy
         authority: &Signer<'info>,
         token_program: &Program<'info, Token>,
@@ -74,12 +72,14 @@ impl<'info> AssetInfoAccount<'info> for Account<'info, AssetInfo> {
         }
 
         //calculate usd required
-        let total_cost = self.price * amount;
+        let total_cost = price * amount;
 
         //check if user has enough usd
         if user_wallet.amount < total_cost {
             return Err(InventoryError::InsufficientUSDC.into());
         }
+
+        // msg!("total cost: {}, user_wallet: {}", total_cost, user_wallet.amount);
 
         // transfer usdc
         transfer(
@@ -99,7 +99,6 @@ impl<'info> AssetInfoAccount<'info> for Account<'info, AssetInfo> {
         let seed: &[&[&[u8]]] = &[&[
             main_const::VAULT,
             mint_key.as_ref(),
-            authority.key.as_ref(),
             &[vault_bump],
         ]];
         transfer(

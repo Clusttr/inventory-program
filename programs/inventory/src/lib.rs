@@ -15,8 +15,8 @@ pub mod inventory {
         instructions::initialize(ctx)
     }
 
-    pub fn create_inventory(ctx: Context<CreateInventory>, price: u64) -> Result<()> {
-        instructions::create_inventory(ctx, price)
+    pub fn create_inventory(ctx: Context<CreateInventory>) -> Result<()> {
+        instructions::create_inventory(ctx)
     }
 
     pub fn close_inventory(ctx: Context<CloseInventory>) -> Result<()> {
@@ -29,13 +29,6 @@ pub mod inventory {
 
     pub fn withdraw_asset(ctx: Context<WithdrawAsset>, amount: u64) -> Result<()> {
         instructions::withdraw_asset(ctx, amount)
-    }
-
-    pub fn update_asset_info(
-        ctx: Context<UpdateAssetInfo>,
-        new_price: u64,
-    ) -> Result<()> {
-        instructions::update_asset_info(ctx, new_price)
     }
 
     pub fn buy_asset(ctx: Context<BuyAsset>, amount: u64) -> Result<()> {

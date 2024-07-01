@@ -50,6 +50,13 @@ describe("inventory", () => {
         )
     }
 
+    const priceOracle = new anchor.web3.PublicKey("2QQpxGtYLFqKZp5SSejPBMPfWUGq1K3GKN8gEtJUgf6q")
+
+    const assetPrice = PublicKey.findProgramAddressSync(
+        [nft.toBuffer()],
+        priceOracle
+    )[0]
+
 
     it.skip("should initialize program", async () => {
         const tx = await program.methods.initialize()
@@ -63,7 +70,7 @@ describe("inventory", () => {
     it.skip("should create inventory", async () => {
         let price = new anchor.BN(10 * 10 ** 2)
         const usdc_ata = (await get_mint_ata(payer.payer, USDC_MINT)).address
-        const tx = await program.methods.createInventory(price)
+        const tx = await program.methods.createInventory()
             .accounts({
                 signer: payer.publicKey,
                 merchantUsdcAccount: usdc_ata,
@@ -79,8 +86,8 @@ describe("inventory", () => {
 
     it.skip("should add asset", async () => {
         let userAssetAccount = (await get_mint_ata(payer.payer, nft)).address
-        // const tx_mint = await mintTo(provider.connection, payer.payer, nft, userAssetAccount, payer.publicKey, 100)
-        // console.log({tx_mint})
+        const tx_mint = await mintTo(provider.connection, payer.payer, nft, userAssetAccount, payer.publicKey, 100)
+        console.log({tx_mint})
         let amount = new anchor.BN(10)
         const tx = await program.methods.addAsset(amount)
             .accounts({
@@ -119,31 +126,33 @@ describe("inventory", () => {
             .rpc()
 
         const assetInfo = await program.account.assetInfo.fetch(asset_info)
-        console.log({price: assetInfo.price.toNumber()})
-        assert(assetInfo.price.toNumber() === newPrice.toNumber(), `Expected ${5 * 10 ** 2} but found ${assetInfo.price}`)
+        // console.log({price: assetInfo.price.toNumber()})
+        // assert(assetInfo.price.toNumber() === newPrice.toNumber(), `Expected ${5 * 10 ** 2} but found ${assetInfo.price}`)
     });
 
     it("should buy asset", async () => {
         const payerUsdcAccount = (await get_mint_ata(payer.payer, USDC_MINT)).address
         const payerMintAccount = (await get_mint_ata(payer.payer, nft)).address
 
-        const tx_mint = await mintTo(provider.connection, payer.payer, USDC_MINT, payerMintAccount, payer.publicKey, 1000 * 10 ** 2)
-        console.log({tx_mint})
+        // const tx_mint = await mintTo(provider.connection, payer.payer, USDC_MINT, payerUsdcAccount, payer.publicKey, 100000 * 10 ** 6)
+        // console.log({tx_mint})
 
         let amount = new anchor.BN(1)
-        const tx = await program.methods.buyAsset(amount)
+        const buy_tx = await program.methods.buyAsset(amount)
             .accounts({
                 signer: payer.publicKey,
                 buyerUsdcAccount: payerUsdcAccount,
                 buyerAssetAccount: payerMintAccount,
                 merchantUsdcAccount: payerUsdcAccount,
                 assetInfo: asset_info,
+                assetPrice,
                 assetVault: asset_vault,
                 usdcMint: USDC_MINT,
-                assetMint: nft
+                assetMint: nft,
+                priceOracle
             })
             .rpc()
-        console.log(tx)
+        console.log({buy_tx})
     })
 
     it.skip("should close inventory", async () => {
